@@ -1,8 +1,10 @@
+nutriguide/
 .env
 __pycache__/
 *.pyc
 *.pyo
 .ipynb_checkpoints/
+.vscode/
 backend/storage/raw/
 backend/storage/embeddings/
 backend/storage/vectordb/
