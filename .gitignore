@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+backend/storage/raw/
+backend/storage/embeddings/
+backend/storage/vectordb/
+backend/storage/processed/
+backend/logs/*.log
+*.faiss
+*.pkl
