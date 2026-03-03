@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 *.pyo
 .ipynb_checkpoints/
+.pytest_cache/
 .vscode/
 backend/storage/raw/
 backend/storage/embeddings/
