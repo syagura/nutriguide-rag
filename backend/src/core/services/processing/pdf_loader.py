@@ -77,7 +77,7 @@ def load_all_pdfs(data_dir: str) -> list[dict]:
     all_pages = []
     for pdf_file in pdf_files:
         try:
-            pages = load_pdf(str(pdf_files))
+            pages = load_pdf(str(pdf_file))
             all_pages.extend(pages)
         except Exception as e:
             logger.error(f"Failed load {pdf_file.name}: {e}")
