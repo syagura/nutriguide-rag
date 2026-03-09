@@ -13,3 +13,5 @@ backend/storage/processed/
 backend/logs/*.log
 *.faiss
 *.pkl
+logs/
+backend/logs/*.log

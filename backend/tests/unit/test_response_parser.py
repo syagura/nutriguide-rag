@@ -1,4 +1,4 @@
-from src.core.services.inference.respon_parser import parse_response
+from backend.src.core.services.inference.response_parser import parse_response
 
 def test_parse_response_structure():
     raw = {
