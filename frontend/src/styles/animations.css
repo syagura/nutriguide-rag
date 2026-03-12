@@ -1,0 +1,99 @@
+/* Fade in up — buat page load dan section reveal */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade in — simple opacity */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Typing cursor blink */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Pulse glow buat accent elements */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(45, 212, 191, 0.2); }
+  50% { box-shadow: 0 0 24px rgba(45, 212, 191, 0.4); }
+}
+
+/* Shimmer buat loading skeleton */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Float — buat hero elements */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Dot bounce buat loading indicator */
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Scale in buat popup/modal */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Slide in from right buat citation card */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Utility animation classes */
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease forwards;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Stagger delays buat list items */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }

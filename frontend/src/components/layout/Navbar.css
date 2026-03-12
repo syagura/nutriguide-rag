@@ -1,0 +1,222 @@
+.navbar {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 900px;
+  border-radius: var(--radius-xl);
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+}
+
+.navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+}
+
+/* Logo */
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-accent), #0d9488);
+  color: #0d1117;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.25);
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* Desktop nav */
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+}
+
+.nav-link {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.nav-link:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
+}
+
+.nav-link.active {
+  color: var(--color-text-accent);
+  background: var(--color-accent-subtle);
+}
+
+.navbar-cta {
+  padding: 7px 18px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: #0d1117;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-base);
+  box-shadow: 0 0 16px rgba(45, 212, 191, 0.2);
+}
+
+.navbar-cta:hover {
+  background: var(--color-accent-dim);
+  box-shadow: 0 0 24px rgba(45, 212, 191, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Hide/show helpers */
+.desktop-only {
+  display: flex;
+}
+
+/* Hamburger button */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 8px;
+  transition: all var(--transition-fast);
+}
+
+.hamburger:hover {
+  border-color: var(--color-border-accent);
+  background: var(--color-accent-subtle);
+}
+
+.bar {
+  display: block;
+  width: 100%;
+  height: 1.5px;
+  background: var(--color-text-secondary);
+  border-radius: 2px;
+  transition: all var(--transition-base);
+  transform-origin: center;
+}
+
+/* Animasi bar jadi X saat menu open */
+.hamburger .bar.open:nth-child(1) {
+  transform: translateY(6.5px) rotate(45deg);
+}
+.hamburger .bar.open:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.hamburger .bar.open:nth-child(3) {
+  transform: translateY(-6.5px) rotate(-45deg);
+}
+
+/* Mobile overlay */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 99;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+  opacity: 0;
+}
+
+.mobile-menu {
+  width: calc(100% - 32px);
+  max-width: 400px;
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+}
+
+.mobile-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mobile-link {
+  display: block;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.mobile-link:hover,
+.mobile-link.active {
+  color: var(--color-text-accent);
+  background: var(--color-accent-subtle);
+}
+
+.mobile-cta {
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+  padding: 13px 24px;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 640px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .navbar-inner {
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    top: 12px;
+    width: calc(100% - 24px);
+  }
+}
