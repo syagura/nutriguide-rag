@@ -1,0 +1,98 @@
+.citation-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.citation-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-accent);
+  background: var(--color-accent-subtle);
+  color: var(--color-text-accent);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  letter-spacing: 0.02em;
+}
+
+.citation-toggle:hover {
+  background: var(--color-accent-glow);
+  border-color: var(--color-accent);
+}
+
+.citation-chevron {
+  transition: transform var(--transition-fast);
+  display: flex;
+  align-items: center;
+}
+
+.citation-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Glossy glass dropdown */
+.citation-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  min-width: 280px;
+  max-width: 360px;
+  background: rgba(20, 27, 40, 0.85);
+  backdrop-filter: var(--glass-blur-heavy);
+  -webkit-backdrop-filter: var(--glass-blur-heavy);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  z-index: 50;
+}
+
+.citation-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+}
+
+.citation-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.citation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.citation-num {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-border-accent);
+  color: var(--color-accent);
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.citation-source {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  word-break: break-word;
+}
