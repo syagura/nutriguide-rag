@@ -1,13 +1,12 @@
-// API base URL 
+// API base URL — switch antara dev dan production
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
 
-// App info 
+// App info
 export const APP_NAME = 'NutriGuide'
-export const APP_TAGLINE = 'Evidence-based pediatric nutrition guidace, powered by AI'
+export const APP_TAGLINE = 'Evidence-based pediatric nutrition guidance, powered by AI'
 export const APP_VERSION = '1.0.0'
 
-
-// Chat config 
+// Chat config
 export const MAX_QUERY_LENGTH = 500
 export const MIN_QUERY_LENGTH = 3
 
