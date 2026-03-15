@@ -1,0 +1,14 @@
+{
+  "timestamp": "20260315_142635",
+  "scores": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.0,
+    "context_precision": 0.3333,
+    "n_samples": 1
+  },
+  "interpretation": {
+    "faithfulness": "✅ Good - LLM answer are well-grounded in the documents (score: 1.0)",
+    "answer_relevancy": "⚠️ Needs inprovement (score: 0.0)",
+    "context_precision": "⚠️ Needs inprovement (score: 0.3333)"
+  }
+}

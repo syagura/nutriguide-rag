@@ -1,7 +1,4 @@
-import os
 import logging
-from langchain_groq import ChatGroq
-from ragas import evaluate
 from ragas.llms import LangchainLLMWrapper
 
 from core.services.inference.inference_engine import run_inference
@@ -71,18 +68,14 @@ def setup_ragas_llm() -> LangchainLLMWrapper: # type: ignore
     Raises:
         RuntimeError: If GROQ_API_KEY is not set
     """
-    api_key = os.getenv("GROQ_API_KEY")
+    from langchain_ollama import ChatOllama
 
-    if not api_key:
-        raise RuntimeError("GROQ_API_KEY is not set - required for RAGAS evaluation")
-    
-    groq_llm = ChatGroq(
-        model="llama-3.1-8b-instant",
-        api_key=api_key,
+    ollama_llm = ChatOllama(
+        model="qwen2.5:0.5b",
         temperature=0
     )
 
-    return LangchainLLMWrapper(groq_llm)
+    return LangchainLLMWrapper(ollama_llm)
 
 def run_full_evaluation(
         test_cases: list[dict],
@@ -93,25 +86,10 @@ def run_full_evaluation(
         reranker,
         llm
     ) -> dict:
-    """
-    Run the full RAGAS evaluation pipeline on a list test cases.
 
-    Args:
-        test_cases: List of dicts with 'question' and 'ground_truth' keys
-        chunks: Full list of indexed chunks
-        faiss_index: Built FAISS index
-        bm25: Fitted BM25 index
-        embedding_model: SentenceTransformer model
-        reranker: CrossEncoder model
-        llm: Intialized LLm backend
-
-    Returns:
-        Dict containing RAGAS scores and evaluation metadata
-    """
     logger.info(f"Starting full RAGAS evaluation - {len(test_cases)} test cases")
 
-    ragas_llm = setup_ragas_llm()
-
+    # Jalanin inference dulu — kumpulin semua evaluation_data
     evaluation_data = []
     for i, test_case in enumerate(test_cases):
         logger.info(f"Processing test case {i + 1}/{len(test_cases)}: '{test_case['question']}'")
@@ -127,13 +105,21 @@ def run_full_evaluation(
                 llm=llm
             )
             evaluation_data.append(sample)
-
         except Exception as e:
-            logger.error(f"Failed to process test cases {i + 1}: {e}")
+            logger.error(f"Failed to process test case {i + 1}: {e}")
             continue
 
     if not evaluation_data:
         raise RuntimeError("All test cases failed - no evaluation data to process")
-    
-    scores = run_ragas_evaluation(evaluation_data)
+
+    # Inference selesai — bebasin RAM sebelum RAGAS jalan
+    logger.info("Inference complete — freeing RAM before RAGAS evaluation...")
+    import gc
+    del embedding_model
+    del reranker
+    gc.collect()
+    logger.info("RAM freed!")
+
+    ragas_llm = setup_ragas_llm()
+    scores = run_ragas_evaluation(evaluation_data, ragas_llm=ragas_llm)
     return scores

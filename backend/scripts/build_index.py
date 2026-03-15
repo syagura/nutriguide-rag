@@ -5,8 +5,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from dotenv import load_dotenv
-from src.core.logging import setup_logging
-from src.core.services.rag.indexer import build_index
+from core.logging import setup_logging
+from core.services.rag.indexer import build_index
 
 load_dotenv()
 setup_logging()
