@@ -1,18 +1,37 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { sendChatMessage } from '../utils/api'
 
+const SESSION_KEY = 'nutriguide_messages'
+
+const loadMessages = () => {
+  try {
+    const saved = sessionStorage.getItem(SESSION_KEY)
+    return saved ? JSON.parse(saved) : []
+  } catch {
+    return []
+  }
+}
+
 export const useChat = () => {
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState(loadMessages)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
+  // Sync ke sessionStorage setiap kali messages berubah
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(messages))
+    } catch {
+      // skip kalau sessionStorage penuh
+    }
+  }, [messages])
+
   const sendMessage = useCallback(async (query) => {
-    // Tambah pesan user ke list dulu sebelum nunggu response
     const userMessage = {
       id: Date.now(),
       role: 'user',
       content: query,
-      timestamp: new Date()
+      timestamp: new Date().toISOString() 
     }
 
     setMessages(prev => [...prev, userMessage])
@@ -22,14 +41,13 @@ export const useChat = () => {
     try {
       const response = await sendChatMessage(query)
 
-      // Pesan assistant ditambah setelah response balik dari API
       const assistantMessage = {
         id: Date.now() + 1,
         role: 'assistant',
         content: response.answer,
         sources: response.sources || [],
         hasSources: response.has_sources,
-        timestamp: new Date()
+        timestamp: new Date().toISOString() 
       }
 
       setMessages(prev => [...prev, assistantMessage])
@@ -43,6 +61,7 @@ export const useChat = () => {
   const clearMessages = useCallback(() => {
     setMessages([])
     setError(null)
+    sessionStorage.removeItem(SESSION_KEY)
   }, [])
 
   return { messages, isLoading, error, sendMessage, clearMessages }

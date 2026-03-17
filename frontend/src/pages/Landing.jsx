@@ -94,7 +94,7 @@ const Landing = () => {
           {/* Floating stats */}
           <div className="hero-stats animate-fade-in-up stagger-5">
             {[
-              { val: '4', label: 'Knowledge Bases' },
+              { val: '22', label: 'Knowledge Documents' },
               { val: 'RAG', label: 'Architecture' },
               { val: 'LLM', label: 'Llama 3.1 8B' }
             ].map((stat, i) => (

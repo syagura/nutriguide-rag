@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 # Root directory backend 
-BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Path to folder storage 
 STORAGE_DIR = BACKEND_ROOT / "storage"

@@ -1,6 +1,7 @@
 import logging
 from core.services.rag.hybrid_retriever import hybrid_search
 from core.services.rag.reranker import rerank_chunks
+from core.services.rag.query_translator import translate_query
 from core.services.llm.base_llm import BaseLLM
 from core.prompts.chain import run_rag_chain
 from sentence_transformers import SentenceTransformer, CrossEncoder
@@ -39,9 +40,13 @@ def run_inference(
     """
     logger.info(f"Starting Inference for query: '{query}'")
 
+    retrieval_query, detected_lang = translate_query(query)
+    if detected_lang == 'id':
+        logger.info(f"Query translated for retrieval: '{retrieval_query}'")
+
     # Hybrid Retrieval 
     retrieved = hybrid_search(
-        query=query,
+        query=retrieval_query,
         chunks=chunks,
         faiss_index=faiss_index,
         bm25=bm25,
@@ -51,7 +56,7 @@ def run_inference(
 
     # Reranking 
     reranked = rerank_chunks(
-        query=query,
+        query=retrieval_query,
         chunks=retrieved,
         reranker=reranker,
         top_k=rerank_top_k
@@ -66,6 +71,7 @@ def run_inference(
 
     # Add query to result 
     result["query"] = query
+    result["detected_language"] = detected_lang
 
-    logger.info(f"Inference completed - query: '{query}'")
+    logger.info(f"Inference completed - query: '{query}' | lang: {detected_lang}")
     return result

@@ -50,59 +50,29 @@
   margin-bottom: 20px;
 }
 
-/* Architecture flow */
-.arch-section { opacity: 0; }
-
-.arch-flow {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 24px;
+/* Architecture diagram image */
+.arch-diagram-wrap {
   border-radius: var(--radius-lg);
-}
-
-.arch-step-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.arch-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  background: var(--color-bg-elevated);
+  overflow: hidden;
   border: 1px solid var(--color-border);
-  min-width: 100px;
-  text-align: center;
-  transition: all var(--transition-base);
+  background: var(--color-bg-elevated);
+  padding: 24px;
+  display: flex;
+  justify-content: center;
 }
 
-.arch-step:hover {
-  border-color: var(--color-border-accent);
-  background: var(--color-accent-subtle);
+.arch-diagram-img {
+  width: 100%;
+  max-width: 760px;
+  height: auto;
+  border-radius: var(--radius-md);
+  object-fit: contain;
 }
 
-.arch-icon { font-size: 20px; }
-
-.arch-step-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.arch-step-sub {
-  font-size: 10.5px;
-  color: var(--color-text-muted);
-}
-
-.arch-arrow {
-  color: var(--color-text-muted);
-  flex-shrink: 0;
+@media (max-width: 640px) {
+  .arch-diagram-wrap {
+    padding: 16px;
+  }
 }
 
 /* Stack grid */
@@ -183,6 +153,154 @@
   font-size: 13.5px;
   color: var(--color-text-secondary);
   line-height: 1.65;
+}
+
+/* Built by */
+.built-by-section { opacity: 0; }
+
+.builder-card {
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  transition: all var(--transition-base);
+}
+
+.builder-card:hover {
+  border-color: var(--color-border-accent);
+}
+
+.builder-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex: 1;
+}
+
+.builder-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-accent), #0d9488);
+  color: #0d1117;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(45, 212, 191, 0.2);
+}
+
+.builder-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.builder-name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.builder-role {
+  font-size: 13px;
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.builder-desc {
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  max-width: 380px;
+  margin-top: 4px;
+}
+
+.builder-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.builder-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  min-width: 130px;
+}
+
+.builder-link:hover {
+  border-color: var(--color-border-accent);
+  color: var(--color-text-accent);
+  background: var(--color-accent-subtle);
+  transform: translateX(2px);
+}
+
+.builder-initial {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  color: #0d1117;
+}
+
+/* Kalau pakai foto */
+.builder-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.builder-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.builder-tag {
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-accent);
+  background: var(--color-accent-subtle);
+  color: var(--color-text-accent);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .builder-card {
+    flex-direction: column;
+  }
+
+  .builder-links {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .builder-link {
+    flex: 1;
+    justify-content: center;
+    min-width: 100px;
+  }
 }
 
 /* CTA */
