@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.git
+tests/
+notebooks/
+scripts/
+logs/
+storage/raw/
+storage/embeddings/
+storage/processed/
+storage/evaluation/
+nutriguide/

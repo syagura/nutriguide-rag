@@ -1,11 +1,12 @@
 import axios from 'axios'
 import { API_BASE_URL } from '../constants'
 
-// Axios instance dengan base config
-// semua request otomatis pakai base URL dan timeout ini
+const BACKEND_URL = API_BASE_URL.replace('/api/v1', '')
+const PING_INTERVAL = 10 * 60 * 1000
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 60000, // 60 detik — LLM inference bisa lama
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -17,6 +18,46 @@ export const sendChatMessage = async (query) => {
 }
 
 export const checkHealth = async () => {
-  const response = await apiClient.get('/health')
-  return response.data
+  try {
+    const response = await axios.get(`${BACKEND_URL}/api/v1/health`, { timeout: 10000 })
+    return response.data?.status === 'ok' || response.data?.status === 'healthy'
+  } catch {
+    return false
+  }
+}
+
+export const waitForBackend = async (
+  onStatusChange,
+  maxAttempts = 10,
+  intervalMs = 3000
+) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    onStatusChange('warming_up')
+    const isReady = await checkHealth()
+    console.log(`Attempt ${i + 1}: isReady = ${isReady}`)  // debug
+    if (isReady) {
+      console.log('Backend ready! Setting status to ready')  // debug
+      onStatusChange('ready')
+      return true
+    }
+    await new Promise(res => setTimeout(res, intervalMs))
+  }
+  onStatusChange('failed')
+  return false
+}
+
+// Ping for keep-alive backend 
+export const startKeepAlive = () => {
+  const ping = async () => {
+    try {
+      await axios.get(`${BACKEND_URL}/api/v1/health`, { timeout: 5000 })
+    } catch {
+      // silent fall 
+    }
+  }
+
+  ping()
+  const interval = setInterval(ping, PING_INTERVAL)
+  window.addEventListener('beforeunload', () => clearInterval(interval))
+  return interval
 }

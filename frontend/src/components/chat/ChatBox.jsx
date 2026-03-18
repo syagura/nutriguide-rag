@@ -3,7 +3,7 @@ import MessageBubble from './MessageBubble'
 import { MAX_QUERY_LENGTH, MIN_QUERY_LENGTH } from '../../constants'
 import './ChatBox.css'
 
-const ChatBox = ({ messages, isLoading, error, onSend }) => {
+const ChatBox = ({ messages, isLoading, error, onSend, disabled = false }) => {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef(null)
   const textareaRef = useRef(null)
@@ -23,7 +23,7 @@ const ChatBox = ({ messages, isLoading, error, onSend }) => {
 
   const handleSend = () => {
     const trimmed = input.trim()
-    if (trimmed.length < MIN_QUERY_LENGTH || isLoading) return
+    if (trimmed.length < MIN_QUERY_LENGTH || isLoading || disabled) return
     onSend(trimmed)
     setInput('')
   }
@@ -65,7 +65,8 @@ const ChatBox = ({ messages, isLoading, error, onSend }) => {
                 <button
                   key={i}
                   className="suggestion-chip"
-                  onClick={() => onSend(suggestion)}
+                  onClick={() => !disabled && onSend(suggestion)}
+                  disabled={disabled}
                 >
                   {suggestion}
                 </button>
@@ -107,12 +108,12 @@ const ChatBox = ({ messages, isLoading, error, onSend }) => {
           <textarea
             ref={textareaRef}
             className="chat-input"
-            placeholder="Ask about pediatric nutrition..."
+            placeholder={disabled ? "Waiting for server..." : "Ask about pediatric nutrition..."}
             value={input}
             onChange={e => setInput(e.target.value.slice(0, MAX_QUERY_LENGTH))}
             onKeyDown={handleKeyDown}
             rows={1}
-            disabled={isLoading}
+            disabled={isLoading || disabled}
           />
           <div className="input-footer">
             {/* Char counter — muncul kalau udah dekat limit */}
@@ -123,9 +124,9 @@ const ChatBox = ({ messages, isLoading, error, onSend }) => {
             )}
             <span className="input-hint">Shift+Enter for new line</span>
             <button
-              className={`send-btn ${isValid && !isLoading ? 'active' : ''}`}
+              className={`send-btn ${isValid && !isLoading && !disabled ? 'active' : ''}`}
               onClick={handleSend}
-              disabled={!isValid || isLoading}
+              disabled={!isValid || isLoading || disabled}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="22" y1="2" x2="11" y2="13" />

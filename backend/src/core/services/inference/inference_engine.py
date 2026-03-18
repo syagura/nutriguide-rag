@@ -40,24 +40,43 @@ def run_inference(
     """
     logger.info(f"Starting Inference for query: '{query}'")
 
-    retrieval_query, detected_lang = translate_query(query)
+    translated_query, detected_lang = translate_query(query)
     if detected_lang == 'id':
-        logger.info(f"Query translated for retrieval: '{retrieval_query}'")
+        logger.info(f"Query translated for retrieval: '{translated_query}'")
 
     # Hybrid Retrieval 
-    retrieved = hybrid_search(
-        query=retrieval_query,
+    retrieved_en = hybrid_search(
+        query=translated_query,
         chunks=chunks,
         faiss_index=faiss_index,
         bm25=bm25,
         embedding_model=embedding_model,
-        top_k=retrieval_top_k
+        top_k=retrieval_top_k // 2
     )
+
+    retrieved_id = hybrid_search(
+        query=query,
+        chunks=chunks,
+        faiss_index=faiss_index,
+        bm25=bm25,
+        embedding_model=embedding_model,
+        top_k=retrieval_top_k // 2
+    )
+
+    seen = set()
+    combined = []
+    for chunk in retrieved_en + retrieved_id:
+        key = chunk['text'][:100]
+        if key not in seen:
+            seen.add(key)
+            combined.append(chunk)
+    
+    logger.info(f"Combined retrieval: {len(retrieved_en)} EN + {len(retrieved_id)} ID = {len(combined)} unique chunks")
 
     # Reranking 
     reranked = rerank_chunks(
-        query=retrieval_query,
-        chunks=retrieved,
+        query=translated_query,
+        chunks=combined,
         reranker=reranker,
         top_k=rerank_top_k
     )
