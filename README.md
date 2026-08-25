@@ -80,7 +80,7 @@ NutriGuide addresses these problems by combining hybrid retrieval over official 
 
 ## Architecture
 
-![Architecture](images/Architecture.png)
+![Architecture](images/ArchitectureNew.png)
 
 ### Indexing Pipeline (Offline)
 
