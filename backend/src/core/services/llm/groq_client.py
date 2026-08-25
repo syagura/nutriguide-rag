@@ -5,13 +5,13 @@ from core.services.llm.base_llm import BaseLLM
 
 logger =  logging.getLogger(__name__)
 
-DEFAULT_GROQ_MODEL = 'llama-3.1-8b-instant'
+DEFAULT_GROQ_MODEL = 'openai/gpt-oss-20b'
 
 class GroqClient(BaseLLM):
     """
     LLM client implementation using the groq API.
 
-    Uses Llama 3.1 8B via Groq's LPU inference for fast response times.
+    Uses openai/gpt-oss-20b via Groq's LPU inference for fast response times.
     Reqiures GROQ_API_KEY to be set in the environment variables.
     """
     def __init__(self, model_name: str = DEFAULT_GROQ_MODEL):
@@ -19,7 +19,7 @@ class GroqClient(BaseLLM):
         Initialize the Groq Client.
 
         Args:
-            model_name: Groq model identifier to use (default: llama-3.1-8b-instant)
+            model_name: Groq model identifier to use (default: openai/gpt-oss-20b)
         """
         self._model_name = model_name
         self._api_key = os.getenv("GROQ_API_KEY")
