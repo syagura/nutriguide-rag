@@ -4,7 +4,7 @@ import './About.css'
 const stack = [
   { category: 'Backend', items: ['FastAPI', 'Python 3.10', 'Pydantic'] },
   { category: 'RAG Pipeline', items: ['FAISS', 'BM25Okapi', 'RRF Fusion', 'Cross-Encoder Reranker'] },
-  { category: 'LLM & Embeddings', items: ['Groq (Llama 3.1 8B)', 'Multilingual MiniLM', 'SentenceTransformers'] },
+  { category: 'LLM & Embeddings', items: ['Groq (Openai/gpt-oss-20B)', 'Multilingual MiniLM', 'SentenceTransformers'] },
   { category: 'Evaluation', items: ['RAGAS', 'Faithfulness', 'Answer Relevancy', 'Context Precision'] },
   { category: 'Frontend', items: ['React', 'Vite', 'Tailwind CSS v4'] },
   { category: 'Knowledge Bases', items: ['WHO - World Health Organization', 'UNICEF - Child Nutrition Division', 'KEMENKES RI - Ministry of Health', 'Buku KIA - Maternal & Child Health'] }
@@ -29,7 +29,7 @@ const About = () => {
         <h2 className="section-label">Architecture</h2>
         <div className='arch-diagram-wrap'>
           <img 
-            src="/architecture.png" 
+            src="/architecture-new.png" 
             alt="NutriGuide RAG Architecture Diagram" 
             className='arch-diagram-img'
           />
@@ -63,7 +63,7 @@ const About = () => {
           {[
             {
               title: 'Why Groq instead of local LLM?',
-              desc: 'Limited RAM (8GB) makes running Phi-3 Mini uncomfortable locally. Groq provides free-tier Llama 3.1 8B with LPU inference — significantly faster and higher quality.'
+              desc: 'Limited RAM (8GB) makes running Phi-3 Mini uncomfortable locally. Groq provides free-tier GPT-OSS-20B with LPU inference — significantly faster and higher quality.'
             },
             {
               title: 'Why Hybrid Retrieval?',
