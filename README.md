@@ -11,19 +11,33 @@
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Problem Statement](#problem-statement)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [API Reference](#api-reference)
-- [Evaluation](#evaluation)
-- [Knowledge Base](#knowledge-base)
-- [Limitations](#limitations)
-- [Roadmap](#roadmap)
-- [Author](#author)
+- [NutriGuide — RAG-Based Pediatric Nutrition Assistant](#nutriguide--rag-based-pediatric-nutrition-assistant)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Problem Statement](#problem-statement)
+  - [Features](#features)
+  - [Architecture](#architecture)
+    - [Indexing Pipeline (Offline)](#indexing-pipeline-offline)
+  - [Tech Stack](#tech-stack)
+  - [Project Structure](#project-structure)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [1. Clone the repository](#1-clone-the-repository)
+    - [2. Setup backend environment](#2-setup-backend-environment)
+    - [3. Configure environment variables](#3-configure-environment-variables)
+    - [4. Add knowledge base PDFs](#4-add-knowledge-base-pdfs)
+    - [5. Build the index](#5-build-the-index)
+    - [6. Start the backend](#6-start-the-backend)
+    - [7. Setup and start the frontend](#7-setup-and-start-the-frontend)
+  - [API Reference](#api-reference)
+    - [POST `/api/v1/chat`](#post-apiv1chat)
+    - [GET `/api/v1/health`](#get-apiv1health)
+  - [Evaluation](#evaluation)
+  - [Knowledge Base](#knowledge-base)
+  - [Limitations](#limitations)
+  - [Roadmap](#roadmap)
+  - [Author](#author)
+  - [License](#license)
 
 ---
 
@@ -33,8 +47,8 @@ NutriGuide is a production-grade RAG (Retrieval-Augmented Generation) applicatio
 
 Every answer is accompanied by source citations, allowing users to trace back to the exact document and page that informed the response.
 
-**Live Demo:** [Coming soon — HuggingFace Spaces]  
-**Portfolio:** [syahrulgunawanramdhani-portfolio.web.app/](https://syahrulgunawanramdhani-portfolio.web.app/)
+**Live Demo:** [nutriguide-rag.vercel.app](https://nutriguide-rag.vercel.app/)  
+**Portfolio:** [syahrulgunawanramdhani-portfolio.web.app](https://syahrulgunawanramdhani-portfolio.web.app/)
 
 ---
 
@@ -79,7 +93,7 @@ NutriGuide addresses these problems by combining hybrid retrieval over official 
 | Layer | Technology |
 |-------|-----------|
 | **Backend** | FastAPI, Python 3.10, Pydantic v2 |
-| **LLM** | Groq API (Llama 3.1 8B Instant) |
+| **LLM** | Groq API (Openai/gpt-oss-20B) |
 | **Embeddings** | sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 |
 | **Vector Store** | FAISS (IndexFlatIP) |
 | **Keyword Search** | BM25Okapi (rank-bm25) |
@@ -275,7 +289,7 @@ Check API and pipeline status.
 {
   "status": "healthy",
   "pipeline_loaded": true,
-  "model": "llama-3.1-8b-instant"
+  "model": "openai/gpt-oss-20b"
 }
 ```
 

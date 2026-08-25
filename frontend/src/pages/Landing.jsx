@@ -47,7 +47,7 @@ const features = [
 const steps = [
   { num: '01', title: 'Ask a question', desc: 'Type any question about child nutrition, growth, or feeding.' },
   { num: '02', title: 'RAG retrieves context', desc: 'Hybrid retrieval finds the most relevant passages from medical documents.' },
-  { num: '03', title: 'LLM generates answer', desc: 'Llama 3.1 generates a grounded, evidence-based response.' },
+  { num: '03', title: 'LLM generates answer', desc: 'GPT-OSS-20B generates a grounded, evidence-based response.' },
   { num: '04', title: 'View sources', desc: 'Expand citations to see exactly which documents were referenced.' }
 ]
 
@@ -96,7 +96,7 @@ const Landing = () => {
             {[
               { val: '22', label: 'Knowledge Documents' },
               { val: 'RAG', label: 'Architecture' },
-              { val: 'LLM', label: 'Llama 3.1 8B' }
+              { val: 'LLM', label: 'OPENAI/GPT-OSS-80B' }
             ].map((stat, i) => (
               <div key={i} className="stat-item glass">
                 <span className="stat-val">{stat.val}</span>
