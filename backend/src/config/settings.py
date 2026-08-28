@@ -25,3 +25,7 @@ EMBEDDING_MODEL = os.getenv(
 )
 
 RERANKER_MODEL = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+# Session memory config
+SESSION_TTL_SECONDS = int(os.getenv("SESSION_TTL_SECONDS", "1800"))
+SESSION_MAX_MESSAGES = int(os.getenv("SESSION_MAX_MESSAGES", "10"))

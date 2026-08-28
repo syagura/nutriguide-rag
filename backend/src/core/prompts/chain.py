@@ -4,7 +4,7 @@ from core.prompts.templates import SYSTEM_PROMPT, build_rag_prompt
 
 logger = logging.getLogger(__name__)
 
-def run_rag_chain(query: str, chunks: list[dict], llm: BaseLLM) -> dict:
+def run_rag_chain(query: str, chunks: list[dict], llm: BaseLLM, conversation_history: list[dict] | None = None) -> dict:
     """
     Run the full RAG chain: build prompt from chunks and generate LLM response.
 
@@ -26,7 +26,7 @@ def run_rag_chain(query: str, chunks: list[dict], llm: BaseLLM) -> dict:
     logger.info(f"Running RAG chain with {len(chunks)} chunks - model: {llm.model_name}")
 
     # Build prompt from chunks
-    prompt = build_rag_prompt(query, chunks)
+    prompt = build_rag_prompt(query, chunks, conversation_history)
 
     # Generate prompt from LLM with system prompt 
     answer = llm.generate(prompt=prompt, system_prompt=SYSTEM_PROMPT)
