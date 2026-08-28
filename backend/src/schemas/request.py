@@ -10,6 +10,11 @@ class ChatRequest(BaseModel):
         description="User's question about pediatric nutrition"
     )
 
+    session_id: str | None = Field(
+        default=None,
+        description="Session ID for conversational continuity. Omit to start a new session."
+    )
+
     model_config = {
         "json_schema_extra": {
             "examples": [

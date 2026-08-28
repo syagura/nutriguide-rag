@@ -8,7 +8,16 @@ Your answer must follow these rules:
 4. Keep your answer clear, concise, and parent-friendly
 5. Never make up information that is not in the context"""
 
-def build_rag_prompt(query: str, chunks: list[dict]) -> str:
+def build_conversation_block(conversation_history: list[dict] | None) -> str:
+    if not conversation_history:
+        return ""
+    lines = [
+        f"{'User' if msg['role'] == 'user' else 'Assistant'}: {msg['content']}"
+        for msg in conversation_history
+    ]
+    return "[CONVERSATION CONTEXT]\n" + "\n".join(lines) + "\n\n"
+
+def build_rag_prompt(query: str, chunks: list[dict], conversation_history: list[dict] | None = None) -> str:
     """
     Build a RAG prompt by combining retrieved chunks with the user query.
 
@@ -28,7 +37,9 @@ def build_rag_prompt(query: str, chunks: list[dict]) -> str:
         )
 
     context = "\n\n".join(context_blocks)
-    prompt = f"""Use the following context documents to answer the question below.
+    conversation_block = build_conversation_block(conversation_history)
+    prompt = f"""{conversation_block}Use the following context documents to answer the question below.
+    If the question refers to the earlier conversation (e.g. "yang murah", "yang tadi"), use the conversation context above to understand what it refers to.
     
 CONTEXT:
 {context}

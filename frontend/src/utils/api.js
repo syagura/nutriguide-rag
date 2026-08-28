@@ -12,8 +12,8 @@ const apiClient = axios.create({
   }
 })
 
-export const sendChatMessage = async (query) => {
-  const response = await apiClient.post('/chat', { query })
+export const sendChatMessage = async (query, sessionId) => {
+  const response = await apiClient.post('/chat', { query, session_id: sessionId })
   return response.data
 }
 

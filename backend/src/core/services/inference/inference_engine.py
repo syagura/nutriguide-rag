@@ -20,6 +20,7 @@ def run_inference(
         llm: BaseLLM,
         retrieval_top_k: int = 10,
         rerank_top_k: int = 3,
+        conversation_history: list[dict] | None = None
     ) -> dict:
     """
     Run the full inference pipeline: retrieve, rerank, and generate answer.
@@ -85,7 +86,8 @@ def run_inference(
     result = run_rag_chain(
         query=query,
         chunks=reranked,
-        llm=llm
+        llm=llm,
+        conversation_history=conversation_history
     )
 
     # Add query to result 
