@@ -29,3 +29,21 @@ RERANKER_MODEL = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-
 # Session memory config
 SESSION_TTL_SECONDS = int(os.getenv("SESSION_TTL_SECONDS", "1800"))
 SESSION_MAX_MESSAGES = int(os.getenv("SESSION_MAX_MESSAGES", "10"))
+
+# Web retrieval config
+WEB_SEARCH_MAX_RESULTS = int(os.getenv("WEB_SEARCH_MAX_RESULTS", "5"))
+WEB_RERANK_TOP_K = int(os.getenv("WEB_RERANK_TOP_K", "3"))
+WEB_FETCH_TIMEOUT = int(os.getenv("WEB_FETCH_TIMEOUT", "8"))
+TRUSTED_HEALTH_DOMAINS = [
+    "kemenkes.go.id",
+    "idai.or.id",
+    "alodokter.com",
+    "halodoc.com",
+    "who.int",
+    "unicef.org",
+    "cdc.gov",
+    "nih.gov",
+    "medlineplus.gov",
+    "healthychildren.org",
+    "mayoclinic.org",
+]
