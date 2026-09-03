@@ -5,14 +5,14 @@ from ddgs.exceptions import DDGSException, RatelimitException
 
 logger = logging.getLogger(__name__)
 
-def _is_trusted_domain(url: str, trusted_domains: list[str]) -> bool:
+def _is_trusted_domain(url: str, trusted_domains: dict[str, int]) -> bool:
     """Check if host URL match with allowlist domain."""
     netloc = urlparse(url).netloc.lower()
     if netloc.startswith("www."):
         netloc = netloc[4:]
     return any(netloc == d or netloc.endswith(f".{d}") for d in trusted_domains)
 
-def search_web(query: str, max_results: int = 5, trusted_domains: list[str] | None = None) -> list[dict]:
+def search_web(query: str, max_results: int = 5, trusted_domains: dict[str, int] | None = None) -> list[dict]:
     """
     Search the web via DuckDuckGo. Best-effort: returns [] on rate limit,
     network error, or any search failure - never raises.
