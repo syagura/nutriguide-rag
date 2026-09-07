@@ -5,6 +5,7 @@ from core.services.web.search import search_web
 from core.services.web.fetcher import fetch_pages
 from core.services.web.extractor import extract_content
 from core.services.web.source_priority import sort_by_source_tier
+from core.services.web.web_cache import WebCache
 from core.services.processing.preprocessor import clean_text, is_meaningful
 from core.services.processing.chunker import create_chunker
 from core.services.rag.reranker import rerank_chunks
@@ -52,7 +53,8 @@ def retrieve_web_context(
         max_search_results: int = 5,
         rerank_top_k: int = 3,
         fetch_timeout: int = 8,
-        trusted_domains: dict[str, int] | None = None
+        trusted_domains: dict[str, int] | None = None,
+        cache: WebCache | None = None
 ) -> list[dict]:
     """
     Full pipeline: search -> fetch -> extract -> clean -> chunk -> rerank.
@@ -61,6 +63,11 @@ def retrieve_web_context(
     every page fails to fetch, or nothing extractable is found. Caller should
     treat [] as "no web context available" and fallback to other sourecs.
     """
+    if cache is not None:
+        cached = cache.get(query)
+        if cached is not None:
+            return cached
+        
     domains = trusted_domains if trusted_domains is not None else TRUSTED_HEALTH_DOMAINS
     results = search_web(query, max_results=max_search_results, trusted_domains=domains)
     if not results:
@@ -81,5 +88,8 @@ def retrieve_web_context(
     reranked = rerank_chunks(query, chunks, reranker, top_k=rerank_top_k)
     prioritized = sort_by_source_tier(reranked, domains)
 
-    logger.info(f"Wen retrieval completed: {len(reranked)} chunk(s) selected from {len(pages)} pag(s)")
+    if cache is not None and prioritized:
+        cache.set(query, prioritized)
+
+    logger.info(f"Wen retrieval completed: {len(prioritized)} chunk(s) selected from {len(pages)} pag(s)")
     return prioritized
