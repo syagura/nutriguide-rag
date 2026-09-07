@@ -2,7 +2,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from schemas.request import ChatRequest
 from schemas.response import ChatRespose
-from api.dependencies import get_pipeline_components, get_session_store
+from api.dependencies import get_pipeline_components, get_session_store, get_web_cache
 from core.services.inference.inference_engine import retrieve_pdf_chunks
 from core.services.inference.response_parser import parse_response
 from core.prompts.chain import run_rag_chain
@@ -30,6 +30,7 @@ async def chat(request: ChatRequest):
 
         session_id = session_store.get_or_create(request.session_id)
         conversation_history = session_store.get_recent_messages(session_id)
+        web_cache = get_web_cache()
 
         routing = route_query(request.query, conversation_history, components["llm"])
         logger.info(f"Routing decision: {routing}")
@@ -60,7 +61,7 @@ async def chat(request: ChatRequest):
 
         web_chunks = []
         if need_web:
-            web_chunks = retrieve_web_context(retrieval_query, components["reranker"])
+            web_chunks = retrieve_web_context(retrieval_query, components["reranker"], cache=web_cache)
 
         raw_result = run_rag_chain(
             query=request.query,

@@ -55,3 +55,6 @@ TRUSTED_HEALTH_DOMAINS = {
     "alodokter.com": 3,
     "halodoc.com": 3,
 }
+
+# Web config cache TTL 
+WEB_CACHE_TTL_SECONDS = int(os.getenv("WEB_CACHE_TTL_SECONDS", "21600"))

@@ -48,3 +48,41 @@ def test_build_web_chunks_tags_source_type_web(mock_extract):
     assert len(chunks) > 0
     assert chunks[0]["metadata"]["source_type"] == "web"
     assert chunks[0]["metadata"]["source"] == "https://who.int/vitd"
+
+@patch("src.core.services.web.web_retriever.search_web")
+def test_retrieve_web_context_returns_cached_result_without_searching(mock_search):
+    mock_cache = MagickMock()
+    mock_cache.get.return_value = [{"text": "cached chunk", "metadata": {}}]
+
+    result = retrieve_web_context("query", reranker=MagickMock(), cache=mock_cache)
+
+    assert result == [{"text": "cached chunk", "metadata": {}}]
+    mock_search.assert_not_called()
+
+@patch("src.core.services.web.web_retriever.search_web")
+def test_retrieve_web_context_does_not_cache_empty_result(mock_search):
+    mock_search.return_value = []
+    mock_cache = MagickMock()
+    mock_cache.get.return_value = None
+
+    retrieve_web_context("query", reranker=MagickMock(), cache=mock_cache)
+
+    mock_cache.set.assert_not_called()
+
+@patch("scr.core.services.web.web_retriever.rerank_chunks")
+@patch("scr.core.services.web.web_retriever.extract_content")
+@patch("scr.core.services.web.web_retriever.fetch_pages")
+@patch("scr.core.services.web.web_retriever.search_web")
+def test_retrieve_web_context_stores_result_in_cache_on_success(mock_search, mock_fetch, mock_extract, mock_rerank):
+    mock_search.return_value = [{"title": "A", "url": "https://who.int/a", "snippet": "..."}]
+    mock_fetch.return_value = {"https://who.int/a": "<html>...</html>"}
+    mock_extract.return_value = {"text": "the content is long enough to pass the minimum filter. " * 5, "title": "Title"}
+    mock_rerank.return_value = [{"text": "chunk", "metadata": {"source": "https://who.int/a"}}]
+
+    mock_cache = MagickMock()
+    mock_cache.get.return_value = None
+
+    retrieve_web_context("new query", reranker=MagickMock(), cache=mock_cache)
+
+    mock_cache.set.assert_called_once()
+    assert mock_cache.set.call_args[0][0] == "new query"
