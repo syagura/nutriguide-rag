@@ -48,9 +48,15 @@ TRUSTED_HEALTH_DOMAINS = {
     "nih.gov": 1,
     "medlineplus.gov": 1,
     "unicef.org": 1,
+    "pom.go.id": 1,
+    "fda.gov": 1,
+    "efsa.europa.eu": 1,
+    "nhs.uk": 1,
     # Tier 2
     "mayoclinic.org": 2,
     "healthychildren.org": 2,
+    "hopkinsmedicine.org": 2,
+    "health.harvard.edu": 2,
     # Tier 3
     "alodokter.com": 3,
     "halodoc.com": 3,
