@@ -21,9 +21,12 @@ def _is_allowed_by_robots(url: str, user_agent: str = USER_AGENT) -> bool:
     except Exception:
         return True
 
-def fetch_page(url: str, timeout: int = 8) -> str | None:
-    """Fetch one URL's HTML, respecting robots.txt. Never raises - logs and
-    returns None on any failure so one bad URL doesn't kill the batch."""
+def fetch_page(url: str, timeout: int = 8) -> tuple[str | bytes, str] | None:
+    """
+    Fetch one URL's raw content, respecting robots.txt. Returns (content, content_type) -
+    content is decode text for HTML, raw bytes for PDF. Returns None if disallowed,
+    unsupported content-type, or fetch fails. Never raises.
+    """
     if not _is_allowed_by_robots(url):
         logger.info(f"Skipped (robots.txt disallows): {url}")
         return None
@@ -32,24 +35,29 @@ def fetch_page(url: str, timeout: int = 8) -> str | None:
         response = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=timeout)
         response.raise_for_status()
 
-        content_type = response.headers.get("Content-Type", "")
-        if "text/html" not in content_type:
-            logger.info(f"Skipped (not HTML, content-type={content_type}): {url}")
-            return None
+        content_type = response.headers.get("Content-Type", "").split(";")[0].strip().lower()
 
-        return response.text
+        if content_type == "text/html":
+            return response.text, content_type
+
+        if content_type == "application/pdf":
+            return response.content, content_type
+
+        logger.info(f"Skipped (unsupported content-type={content_type}): {url}")
+        return None
+    
     except requests.exceptions.RequestException as e:
         logger.warning(f"Failed to fetch {url}: {e}")
         return None
 
-def fetch_pages(urls: list[str], timeout: int = 8, delay_seconds: float = 0.5) -> dict[str, str]:
+def fetch_pages(urls: list[str], timeout: int = 8, delay_seconds: float = 0.5) -> dict[str, tuple[str | bytes, str]]:
     """Fetch multiple URLs sequentially with a small delay between requests
-    (polinteness). Returns {url: html} only for URLs that succeeded."""
+    (polinteness). Returns {url: (content, content_type)} only for URLs that succeeded."""
     pages = {}
     for i, url in enumerate(urls):
-        html = fetch_page(url, timeout=timeout)
-        if html:
-            pages[url] = html
+        result = fetch_page(url, timeout=timeout)
+        if result:
+            pages[url] = result
         if i < len(urls) - 1:
             time.sleep(delay_seconds)
     return pages
