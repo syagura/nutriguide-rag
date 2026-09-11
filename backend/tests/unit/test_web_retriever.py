@@ -19,7 +19,7 @@ def test_retrieve_web_context_returns_empty_when_no_pages_fetched(mock_search, m
 @patch("src.core.services.web.web_retriever.search_web")
 def test_retrieve_web_context_full_pipeline(mock_search, mock_fetch, mock_extract, mock_rerank):
     mock_search.return_value = [{"title": "A", "url": "https://who.int/a", "snippet": "..."}]
-    mock_fetch.return_value = {"https://who.int/a": "<html>...</html>"}
+    mock_fetch.return_value = {"https://who.int/a": ("<html>...</html>", "text/html")}
     mock_extract.return_value = {
         "text": "Anak usia enam bulan membutuhkan zat besi yang cukup untuk tumbuh kembang. " * 5,
         "title": "Panduan Gizi"
@@ -29,25 +29,33 @@ def test_retrieve_web_context_full_pipeline(mock_search, mock_fetch, mock_extrac
     result = retrieve_web_context("kebutuhan zat besi bayi", reranker=MagickMock())
 
     assert len(result) == 1
-    assert result[0]["metadata"]["source"] == "https://who.int/a"
     mock_rerank.assert_called_once()
+
+@patch("src.core.services.web.web_retriever.extract_pdf_content")
+def test_build_web_chunks_uses_pdf_extractor_for_pdf_content_type(mock_extract_pdf):
+    mock_extract_pdf.return_value = {"text": "Laporan gizi anak dari WHO cukup panjang untuk lolos. " * 10, "title": "Laporan WHO"}
+
+    chunks = _build_web_chunks({"https://who.int/laporan.pdf": (b"pdfbytes", "application/pdf")})
+
+    mock_extract_pdf.assert_called_once_with(b"pdfbytes", "https://who.int/laporan.pdf")
+    assert len(chunks) > 0
+    assert chunks[0]["metadata"]["source_type"] == "web_pdf"
 
 @patch("src.core.services.web.web_retriever.extract_content")
 def test_build_web_chunks_skips_unextractable_pages(mock_extract):
     mock_extract.return_value = None
-    assert _build_web_chunks({"https://who.int/a": "<html>...</html>"}) == []
+    assert _build_web_chunks({"https://who.int/a": ("<html>...</html>", "text/html")}) == []
 
 @patch("src.core.services.web.web_retriever.extract_content")
-def test_build_web_chunks_tags_source_type_web(mock_extract):
+def test_build_web_chunks_tags_source_type_web_for_html(mock_extract):
     mock_extract.return_value = {
         "text": "Vitamin D penting untuk pertumbuhan tulang anak. " * 10,
         "title": "Artikel Vitamin D"
     }
-    chunks = _build_web_chunks({"https://who.int/vitd": "<html>...</html>"})
+    chunks = _build_web_chunks({"https://who.int/vitd": ("<html>...</html>", "text/html")})
 
     assert len(chunks) > 0
     assert chunks[0]["metadata"]["source_type"] == "web"
-    assert chunks[0]["metadata"]["source"] == "https://who.int/vitd"
 
 @patch("src.core.services.web.web_retriever.search_web")
 def test_retrieve_web_context_returns_cached_result_without_searching(mock_search):

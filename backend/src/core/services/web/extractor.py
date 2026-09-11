@@ -1,6 +1,7 @@
 import logging
 import trafilatura
 from bs4 import BeautifulSoup
+import fitz
 
 logger = logging.getLogger(__name__)
 
@@ -44,3 +45,23 @@ def _extract_with_bs4(html: str) -> tuple[str | None, str | None]:
     except Exception as e:
         logger.warning(f"BeautifulSoup fallback failed: {e}")
         return None, None
+
+def extract_pdf_content(pdf_bytes: bytes, url: str) -> dict | None:
+    """
+    Extract text from PDFs found through a web search (e.g. WHO/UNICEF/Ministry of Health reports published as pdf files, not HTML articles)
+    """
+    try:
+        with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+            title = (doc.metadata or {}).get("title") or ""
+            pages_text = [page.get_text() for page in doc]
+    except Exception as e:
+        logger.warning(f"Failed to parse PDF from {url}: {e}")
+        return None
+
+    text = "\n".join(pages_text).strip()
+
+    if len(text) < MIN_EXTRACTED_LENGTH:
+        logger.warning(f"No meaningful content extracted from PDF at {url}")
+        return None
+
+    return {"text": text, "title": title.strip() or url}

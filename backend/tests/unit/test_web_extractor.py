@@ -1,5 +1,5 @@
 from unittest.mock import patch, MagicMock
-from src.core.services.web.extractor import extract_content, _extract_with_bs4
+from src.core.services.web.extractor import extract_content, _extract_with_bs4, extract_pdf_content
 
 @patch("src.core.services.web.extractor.trafilatura.extract_metadata")
 @patch("src.core.services.web.extractor.trafilatura.extract")
@@ -52,3 +52,31 @@ def test_extract_with_bs4_strips_script_and_nav():
     assert "konten utama" in text
     assert "alert" not in text
     assert "Navigasi" not in text
+
+def test_extract_pdf_content_parses_real_pdf_bytes():
+    import fitz
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((50, 50), "Anak usia dua tahun membutuhkan asupan zat besi yang cukup untuk mendukung pertumbuhan. " * 3)
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    result = extract_pdf_content(pdf_bytes, "https://who.int/laporan.pdf")
+
+    assert result is not None
+    assert "zat besi" in result["text"]
+
+def test_extract_pdf_content_returns_none_for_invalid_bytes():
+    result = extract_pdf_content(b"bukan pdf sama sekali", "https://who.int/laporan.pdf")
+    assert result is None
+
+def test_extract_pdf_content_returns_none_when_too_short():
+    import fitz
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((50, 50), "singkat")
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    result = extract_pdf_content(pdf_bytes, "https://who.int/laporan.pdf")
+    assert result is None

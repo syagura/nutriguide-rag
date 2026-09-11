@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="NutriGuide AI",
     description="RAG-based pediatric nutrition assistant",
-    version="2.4.1",
+    version="2.6.1",
     lifespan=lifespan
 )
 

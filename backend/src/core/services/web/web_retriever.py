@@ -3,7 +3,7 @@ from sentence_transformers import CrossEncoder
 
 from core.services.web.search import search_web
 from core.services.web.fetcher import fetch_pages
-from core.services.web.extractor import extract_content
+from core.services.web.extractor import extract_content, extract_pdf_content
 from core.services.web.source_priority import sort_by_source_tier
 from core.services.web.web_cache import WebCache
 from core.services.processing.preprocessor import clean_text, is_meaningful
@@ -13,16 +13,16 @@ from config.settings import TRUSTED_HEALTH_DOMAINS
 
 logger = logging.getLogger(__name__)
 
-def _build_web_chunks(pages: dict[str, str], chunk_size: int = 512, chunk_overlap: int = 128) -> list[dict]:
+def _build_web_chunks(pages: dict[str, tuple], chunk_size: int = 512, chunk_overlap: int = 128) -> list[dict]:
     """
-    Extract, clean, and chunk fetched HTML into PDF-chunk-compatible dicts
-    (same 'txt' + 'metadata' shape as PDF chunks, tagged source_type='web').
+    Extract, clean, and chunk the fetched pages - HTML via extract_content(),
+    PDF via extract_pdf_content(), both resulting in chunks with the same format.
     """
     chunker = create_chunker(chunk_size, chunk_overlap)
     all_chunks = []
 
-    for url, html in pages.items():
-        extracted = extract_content(html, url)
+    for url, (content, content_type) in pages.items():
+        extracted = extract_pdf_content(content, url) if content_type == "application/pdf" else extract_content(content, url)
         if not extracted:
             continue
 
@@ -41,7 +41,7 @@ def _build_web_chunks(pages: dict[str, str], chunk_size: int = 512, chunk_overla
                     "source": url,
                     "title": extracted["title"],
                     "chunk_index": idx,
-                    "source_type": "web"
+                    "source_type": "web_pdf" if content_type == "application/pdf" else "web"
                 }
             })
 
