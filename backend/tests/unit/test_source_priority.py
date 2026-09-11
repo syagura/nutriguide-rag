@@ -37,3 +37,16 @@ def test_get_source_label_known_domain():
 def test_get_source_label_unknown_domain_falls_back_to_netloc():
     label = get_source_label("https://random-blog.com/artikel", "Articel Title")
     assert label == "random-blog.com - Article Title"
+
+def test_get_source_label_new_indonesian_domain():
+    label = get_source_label("https://pom.go.id/artikel/keamanan-pangan", "Keamanan Pangan Anak")
+    assert label == "BPOM RI - Keamanan Pangan Anak"
+
+def test_get_source_label_new_academic_domain():
+    label = get_source_label("https://hopkinsmedicine/health/artikel", "Nutrisi Anak")
+    assert label == "Johns Hopkins Medicine - Nutrisi Anak"
+
+def test_new_domains_have_correct_tier():
+    from src.config.settings import TRUSTED_HEALTH_DOMAINS
+    assert get_domain_tier("https://pom.go.id/x", TRUSTED_HEALTH_DOMAINS) == 1
+    assert get_domain_tier("https://hopkinsmedicine.org/x", TRUSTED_HEALTH_DOMAINS) == 2
