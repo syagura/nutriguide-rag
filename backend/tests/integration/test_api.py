@@ -60,6 +60,44 @@ def test_chat_endpoint_falls_back_to_web_when_pdf_empty():
     assert response.status_code == 200
     mock_web.assert_called_once()
 
+def test_chat_endpoint_falls_back_to_pdf_when_web_empty():
+    mock_components = {
+        "faiss_index": MagicMock(), "chunks": [{"text": "x", "metadata": {}}], "bm25": MagicMock(),
+        "embedding_model": MagicMock(), "reranker": MagicMock(), "llm": MagicMock()
+    }
+    mock_routing = {"need_memory": False, "need_pdf": False, "need_web": True, "query_type": "current_information"}
+    mock_result = {"query": "q", "answer": "answer from pdf", "sources": ["x.pdf - PDF"], "has_sources": True}
+
+    with patch("api.routes.chat.get_pipeline_compoenents", return_value=mock_components), \
+         patch("api.routes.chat.route_query", return_value=mock_routing), \
+         patch("api.routes.chat.retrieve_web_context", return_value=[]), \
+         patch("api.routes.chat.retrieve_pdf_chunks", return_value=([{"text": "content", "metadata": {}}], "id")) as mock_pdf, \
+         patch("api.routes.chat.run_rag_chain", return_value=mock_result), \
+         patch("api.routes.chat.parse_response", return_value=mock_result):
+        response = client.post("/api/v1/chat", json={"query": "recent research for X"})
+
+    assert response.status_code == 200
+    mock_pdf.assert_called_once()
+
+def test_chat_endpoint_does_not_double_fetch_when_hybrid_already_empty():
+    mock_components = {
+        "faiss_index": MagicMock(), "chunks": [{"text": "x", "metadata": {}}], "bm25": MagicMock(),
+        "embedding_model": MagicMock(), "reranker": MagicMock(), "llm": MagicMock()
+    }
+    mock_routing = {"need_memory": False, "need_pdf": True, "need_web": True, "query_type": "mixed"}
+    mock_result = {"query": "q", "answer": "not found", "sources": [], "has_sources": False}
+
+    with patch("api.routes.chat.get_pipeline_components", return_value=mock_components), \
+         patch("api.routes.chat.route_query", return_value=mock_routing), \
+         patch("api.routes.chat.retrieve_web_context", return_value=[]), \
+         patch("api.routes.chat.retrieve_pdf_chunks", return_value=([], "id")) as mock_pdf, \
+         patch("api.routes.chat.run_rag_chain", return_value=mock_result), \
+         patch("api.routes.chat.parse_response", return_value=mock_result):
+        response = client.post("/api/v1/chat", json={"query": "random query"})
+
+    assert response.status_code == 200
+    mock_pdf.assert_called_once()
+    
 def test_chat_endpoint_query_too_short():
     response = client.post("/api/v1/chat", json={"query": "hi"})
     assert response.status_code == 422

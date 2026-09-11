@@ -27,19 +27,13 @@ async def chat(request: ChatRequest):
     try:
         components = get_pipeline_components()
         session_store = get_session_store()
+        web_cache = get_web_cache()
 
         session_id = session_store.get_or_create(request.session_id)
         conversation_history = session_store.get_recent_messages(session_id)
-        web_cache = get_web_cache()
 
         routing = route_query(request.query, conversation_history, components["llm"])
         logger.info(f"Routing decision: {routing}")
-
-        memory_context = conversation_history if routing["need_memory"] else []
-
-        web_chunks = []
-        if routing["need_web"]:
-            web_chunks = retrieve_web_context(request.query, components["reranker"])
 
         memory_context = conversation_history if routing["need_memory"] else []
 
@@ -63,6 +57,13 @@ async def chat(request: ChatRequest):
         if need_web:
             web_chunks = retrieve_web_context(retrieval_query, components["reranker"], cache=web_cache)
 
+        if routing["need_web"] and not routing["need_pdf"] and not web_chunks:
+            logger.info("Web retrieval returned nothing, falling back to PDF retrieval")
+            pdf_chunks, _ = retrieve_pdf_chunks(
+                retrieval_query, components["chunks"], components["faiss_index"],
+                components["bm25"], components["embedding_model"], components["reranker"]
+            )
+            
         raw_result = run_rag_chain(
             query=request.query,
             llm=components["llm"],
