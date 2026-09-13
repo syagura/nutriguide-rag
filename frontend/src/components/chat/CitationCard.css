@@ -96,3 +96,12 @@
   line-height: 1.5;
   word-break: break-word;
 }
+
+.citation-link {
+  text-decoration: none;
+  cursor: pointer;
+}
+.citation-link:hover {
+  text-decoration: underline;
+  color: var(--color-accent);
+}
