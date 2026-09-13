@@ -37,7 +37,19 @@ const CitationCard = ({ sources }) => {
             {sources.map((source, idx) => (
               <li key={idx} className="citation-item">
                 <span className="citation-num">{idx + 1}</span>
-                <span className="citation-source">{source}</span>
+                {source.url ? (
+                  <a 
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className='citation-source citation-link'
+                  >
+                      {source.label}
+                  </a>
+                ) : (
+                  <span className="citation-source">{source.label}</span>
+                )
+              }
               </li>
             ))}
           </ul>

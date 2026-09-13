@@ -41,17 +41,25 @@ def run_rag_chain(
     # Generate prompt from LLM with system prompt 
     answer = llm.generate(prompt=prompt, system_prompt=SYSTEM_PROMPT)
 
-    pdf_sources = {
-        f"{chunk['metadata'].get('source', 'unknown')} - PDF"
-        for chunk in pdf_chunks
-    }
+    pdf_sources = []
+    seen_pdf = set()
+    for chunk in pdf_chunks:
+        label = f"{chunk['metadata'].get('source', 'unknown')} - PDF"
+        if label not in seen_pdf:
+            seen_pdf.add(label)
+            pdf_sources.append({"label": label, "url": None})
 
-    web_sources = {
-        get_source_label(chunk["metadata"]["source"], chunk["metadata"].get("title", "untitled"))
-        for chunk in web_chunks
-    }
+    web_sources = []
+    seen_web = set()
+    for chunk in web_chunks:
+        url = chunk["metadata"]["source"]
+        if url in seen_web:
+            continue
+        seen_web.add(url)
+        label = get_source_label(url, chunk["metadata"].get("title", "untitled"))
+        web_sources.append({"label": label, "url": url})
 
-    sources = list(pdf_sources | web_sources)
+    sources = pdf_sources + web_sources
 
     logger.info(f"RAG chain completed - {len(sources)} sources used")
 
