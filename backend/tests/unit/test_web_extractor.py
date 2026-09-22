@@ -80,3 +80,38 @@ def test_extract_pdf_content_returns_none_when_too_short():
 
     result = extract_pdf_content(pdf_bytes, "https://who.int/laporan.pdf")
     assert result is None
+
+@patch("src.core.services.web.extractor.pdfplumber.open")
+def test_extract_pdf_content_inlcudes_table_text(mock_plumber_open):
+    import fitz
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((50, 50), "Panduan klasifikasi gejala anak sakit. " * 5)
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    mock_plumber_page = MagicMock()
+    mock_plumber_page.extract_tables.return_value = [[["Gejala", "Klasifikasi"], ["Demam", "Berat"]]]
+    mock_plumber_doc = MagicMock()
+    mock_plumber_doc.pages = [mock_plumber_page]
+    mock_plumber_open.return_value = mock_plumber_doc
+
+    result = extract_pdf_content(pdf_bytes, "https://who.int/laporan.pdf")
+
+    assert result is not None
+    assert "[TABLE]" in result["text"]
+    assert "Gejala | Klasifikasi" in result["text"]
+
+def test_extract_pdf_content_respects_max_page_cap():
+    import fitz
+    doc = fitz.open()
+    for _ in range(35):
+        page = doc.new_page()
+        page.insert_text((50, 50), "Konten halaman yang cukup panjang untuk lolos filter minimal ekstraksi. " * 3)
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    with patch("src.core.services.web.extractor.pdfplumber.open", side_effect=Exception("skip")):
+        result = extract_pdf_content(pdf_bytes, "https://who.int/laporan-panjang.pdf")
+
+    assert result is not None

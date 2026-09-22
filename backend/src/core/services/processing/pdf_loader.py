@@ -1,6 +1,8 @@
 import fitz
+import pdfplumber
 import logging
 from pathlib import Path
+from core.services.processing.pdf_tables import extract_page_tables_text
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +32,20 @@ def load_pdf(file_path: str) -> list[dict]:
     
     pages = []
 
+    try:
+        plumber_doc = pdfplumber.open(str(path))
+    except Exception as e:
+        logger.warning(f"pdfplumber failed to open {path.name}, tables won't be extracted: {e}")
+        plumber_doc = None
+
     with fitz.open(str(path)) as doc:
         logger.info(f"Open PDF: {path.name} ({len(doc)} page)")
 
         for page_num, page in enumerate(doc):
             text = page.get_text()
+
+            if plumber_doc is not None and page_num < len(plumber_doc.pages):
+                text += extract_page_tables_text(plumber_doc.pages[page_num])
 
             if len(text.strip()) < 50:
                 logger.warning(
@@ -50,7 +61,10 @@ def load_pdf(file_path: str) -> list[dict]:
                     "page": page_num + 1
                 }
             })
-    
+
+    if plumber_doc is not None:
+        plumber_doc.close()
+        
     logger.info(f"Finish load {path.name}: {len(pages)} page successfully extracted")
     return pages
 

@@ -1,3 +1,4 @@
+import math
 from datasets import Dataset
 from ragas import evaluate
 from ragas.metrics import faithfulness, answer_relevancy, context_precision
@@ -15,20 +16,20 @@ def _get_ragas_embeddings() -> LangchainEmbeddingsWrapper:    # type: ignore
     )
     return LangchainEmbeddingsWrapper(hf_embeddings)
 
+def _is_valid_score(value) -> bool:
+    return value is not None and not (isinstance(value, float) and math.isnan(value))
 
-def _safe_score(value) -> float:
+def _safe_score(value) -> float | None:
     """Safely extract float score — handle NaN, list, None from timeout."""
     try:
         if isinstance(value, list):
-            valid = [v for v in value if v is not None]
-            return round(float(sum(valid) / len(valid)), 4) if valid else 0.0
-        if value is None:
-            return 0.0
-        import math
-        f = float(value)
-        return 0.0 if math.isnan(f) else round(f, 4)
+            valid = [v for v in value if _is_valid_score(v)]
+            return round(float(sum(valid) / len(valid)), 4) if valid else None
+        if not _is_valid_score(value):
+            return None
+        return round(float(value), 4)
     except (TypeError, ValueError, ZeroDivisionError):
-        return 0.0
+        return None
     
 
 def run_ragas_evaluation(evaluation_data: list[dict], ragas_llm) -> dict:
