@@ -47,7 +47,7 @@ def _interpret_scores(scores: dict) -> dict:
     thresholds = {
         "faithfulness": (0.7, "Good - LLM answer are well-grounded in the documents"),
         "answer_relevancy": (0.7, "Good - answer are relevenat to user questions"),
-        "context_precision": (0.7, "Goog - retrieved chunks are precise and relevant")
+        "context_precision": (0.7, "Good - retrieved chunks are precise and relevant")
     }
 
     interpretation = {}
@@ -56,6 +56,8 @@ def _interpret_scores(scores: dict) -> dict:
             continue
 
         score = scores[metric]
+        if score is None:
+            interpretation[metric] = "Could not be computed - the judge LLM failed on every sample for this metric"
         if score >= threshold:
             interpretation[metric] = f" {good_msg} (score: {score})"
         else:
@@ -105,7 +107,7 @@ def _build_comparison_summary(all_scores: dict) -> dict:
     summary = {}
     for metric in metrics:
         ranked = sorted(
-            ((mode, scores[metric]) for mode, scores in all_scores.items() if scores),
+            ((mode, scores[metric]) for mode, scores in all_scores.items() if scores and scores.get(metric) is not None),
             key=lambda x: x[1],
             reverse=True
         )

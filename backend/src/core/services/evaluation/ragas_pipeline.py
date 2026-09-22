@@ -93,25 +93,25 @@ def setup_ragas_llm() -> LangchainLLMWrapper: # type: ignore
     Raises:
         RuntimeError: If GROQ_API_KEY is not set
     """
-    # from langchain_ollama import ChatOllama
+    from langchain_ollama import ChatOllama
 
-    # ollama_llm = ChatOllama(
-    #     model="qwen2.5:0.5b",
-    #     temperature=0
-    # )
-
-    api_key = os.getenv("GROQ_API_KEY")
-
-    if not api_key: 
-        raise RuntimeError("GROQ_API_KEY is not set - required for RAGAS evaluation")
-
-    groq_llm = ChatGroq(
-        model="openai/gpt-oss-20b",
-        api_key=api_key,
+    ollama_llm = ChatOllama(
+        model="qwen2.5:1.5b",
         temperature=0
     )
 
-    return LangchainLLMWrapper(groq_llm)
+    # api_key = os.getenv("GROQ_API_KEY")
+
+    # if not api_key: 
+    #     raise RuntimeError("GROQ_API_KEY is not set - required for RAGAS evaluation")
+
+    # groq_llm = ChatGroq(
+    #     model="openai/gpt-oss-20b",
+    #     api_key=api_key,
+    #     temperature=0
+    # )
+
+    return LangchainLLMWrapper(ollama_llm)
 
 def run_full_evaluation(
         test_cases: list[dict],
