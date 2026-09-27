@@ -45,6 +45,8 @@
 
 NutriGuide is a production-grade RAG (Retrieval-Augmented Generation) application that provides evidence-based answers to questions about pediatric nutrition. Unlike generic chatbots that may hallucinate medical information, NutriGuide grounds every answer in a curated knowledge base of 22 official documents from trusted health institutions.
 
+**Update (V2):** NutriGuide has envolved from a single-source PDF RAG system into a conversational, multi-source assistant - with session memory, hybrid query routing, live web retrieval restricted to vetted health authorities, and comparative RAGAS evaluation across retrieval strategies.
+
 Every answer is accompanied by source citations, allowing users to trace back to the exact document and page that informed the response.
 
 **Live Demo:** [nutriguide-rag.vercel.app](https://nutriguide-rag.vercel.app/)  
@@ -70,17 +72,23 @@ NutriGuide addresses these problems by combining hybrid retrieval over official 
 - **Hybrid Retrieval** — combines FAISS semantic search with BM25 keyword search, fused via Reciprocal Rank Fusion (RRF) for superior retrieval coverage
 - **Cross-Encoder Reranking** — reranks retrieved candidates using a cross-encoder model for precision before generation
 - **Query Translation** — automatically detects Indonesian queries and translates them to English before retrieval, enabling cross-lingual search across all 22 documents
-- **Source Citations** — every answer references its source documents with page numbers, fully transparent and traceable
-- **Multilingual Support** — ask in Indonesian or English, get answers in the same language
-- **RAGAS Evaluation** — pipeline quality measured using Faithfulness, Answer Relevancy, and Context Precision metrics
+- **Session-Based Conversational Memory** - in-memory, TTL-bound session store lets follow-up questions resolve againts recent conversation, without permanent chat hisrtory
+- **Hybrid Query Routing** - a rule-based + LLM-fallback router decides per query whether memory, the local PDF corpus, and/or live web retrieval are needed, avoiding unnecessary retrieval calls
+- **Query Rewriting** - elliptical follow-ups are reformulated into standalone queries before hitting retrieval. so context-dependent questions actually retrieve something relevant
+- **Live Web Retrieval** - search results are restricted to a curated allowlist of official health authorities (WHO, CDC, NIH, Kemenkes RI, IDAI, and others), tiered by source authority, with a TTL cache to reduce repeated searches
+- **Bidirectional Source Fallback** - if the local PDF corpus returns nothing, the system falls back to web retrieval, and vice versa, before giving up
+- **Table-Aware PDF Extraction** - supplements PyMuPDF text extraction with pdfplumber table detection, applied to both the local corpus and PDFs discovered via web search
+- **Source Citations** — every answer references its source documents (with page numbers for PDFs, clickable links for web sources), fully transparent and traceable
+- **Multilingual Support** — ask in Indonesian or English, get answers in the same language, even when the underlying source is in the other language
+- **Comparative RAGAS Evaluation** — pipeline quality measured across four retrieval strategies (PDF-only, Web-only, Hybrid, Memory + Retrieval) using Faithfulness, Answer Relevancy, and Context Precision metrics
 - **LLM Fallback** — Groq API as primary LLM with Ollama local as fallback when API is unavailable
-- **Responsive UI** — clean dark-themed React frontend with typing animation, citation cards, and mobile support
+- **Responsive UI** — clean dark-themed React frontend with markdown-rendered answers (tables, bold, lists), clickable citations links, a staged loading indicator, and mobile support
 
 ---
 
 ## Architecture
 
-![Architecture](images/ArchitectureNew.png)
+![Architecture](images/architecture-v2.png)
 
 ### Indexing Pipeline (Offline)
 
@@ -101,6 +109,10 @@ NutriGuide addresses these problems by combining hybrid retrieval over official 
 | **Reranker** | cross-encoder/ms-marco-MiniLM-L-6-v2 |
 | **PDF Processing** | PyMuPDF (fitz) |
 | **Orchestration** | LangChain |
+| **Web Search** | DuckDuckGo ('ddgs') |
+| **Web Extraction** | Trafilatura + BeautifulSoup4 (HTML), PyMuPDF + pdfplumber (PDF) |
+| **Session Memory** | In-memory TTL store |
+| **Web Cache** | In-memory TTL cache |
 | **Evaluation** | RAGAS (Faithfulness, Answer Relevancy, Context Precision) |
 | **Frontend** | React 18, Vite, Tailwind CSS v4 |
 | **LLM Fallback** | Ollama (local) |
@@ -130,15 +142,18 @@ nutriguide-rag/
 │   │   │   └── settings.py
 │   │   └── core/
 │   │       ├── services/
-│   │       │   ├── processing/    ← pdf_loader, preprocessor, chunker
-│   │       │   ├── rag/           ← embedder, vector_store, bm25, hybrid, reranker, indexer, query_translator
-│   │       │   ├── llm/           ← base_llm, groq_client, local_llm, model_factory
-│   │       │   ├── inference/     ← inference_engine, response_parser
-│   │       │   └── evaluation/    ← metrics, ragas_pipeline, report_generator
-│   │       └── prompts/           ← templates, chain
+│   │       │   ├── evaluation/     ← metrics, ragas_pipeline, report_generator
+│   │       │   ├── inference/      ← inference_engine, response_parser
+│   │       │   ├── llm/            ← base_llm, groq_client, local_llm, model_factory
+│   │       │   ├── memory/         ← session_store
+│   │       │   ├── processing/     ← pdf_loader, preprocessor, chunker, pdf_tables
+│   │       │   ├── router/         ← rules, llm_router, query_router
+│   │       │   ├── rag/            ← embedder, vector_store, bm25, hybrid, reranker, indexer, query_translator
+│   │       │   └── web/            ← search, fetcher, extractor, web_retiever, web_cache, source_priority
+│   │       └── prompts/            ← templates, chain
 │   ├── storage/
-│   │   ├── raw/                   ← place PDF files here
-│   │   └── vectordb/              ← generated index files
+│   │   ├── raw/                    ← place PDF files here
+│   │   └── vectordb/               ← generated index files
 │   ├── notebooks/
 │   │   ├── 01_data_exploration.ipynb
 │   │   ├── 02_retrieval_experiment.ipynb
@@ -258,25 +273,23 @@ Send a question and receive a grounded answer with source citations.
 **Request:**
 ```json
 {
-  "query": "When should I start MPASI?",
-  "top_k": 3
+  "query": "What are the iron requirements for a 6-month-old baby?",
+  "session_id": null
 }
 ```
+*(`session_id` is optional - omit it to start a new session; reusethe one returned in a previous reponse to continue the conversation)*
 
 **Response:**
 ```json
 {
-  "answer": "Complementary feeding (MPASI) should be introduced at 6 months...",
+  "query": "What are the iron requirements for a 6-month-old baby?"
+  "answer": "...",
   "sources": [
-    {
-      "source": "WHO Guideline for complementary feeding.pdf",
-      "page": 12,
-      "text": "..."
-    }
+    { "label": "WHO Infant and Young Child Feeding.pdf — PDF, "url": null },
+    { "label": "WHO — Iron Requirements in Infants", "url": "https://who.int/..." }
   ],
   "has_sources": true,
-  "processing_time": 2.34,
-  "query": "When should I start MPASI?"
+  "session_id": "7e2d660d-a3eb-48e1-a212-2f3594407dfe"
 }
 ```
 
@@ -298,6 +311,7 @@ Check API and pipeline status.
 ## Evaluation
 
 NutriGuide is evaluated using [RAGAS](https://docs.ragas.io/) on three metrics:
+Pipeline quality is measured with RAGAS across four retrieval strategies on the same test cases: **PDF-only**, **Web-only**, **Hybrid**, and **Memory+Retrieval** (multi-turn, with query rewriting).
 
 | Metric | Score | Description |
 |--------|-------|-------------|
@@ -305,7 +319,7 @@ NutriGuide is evaluated using [RAGAS](https://docs.ragas.io/) on three metrics:
 | **Answer Relevancy** | — | Measures how relevant the answer is to the question |
 | **Context Precision** | 0.33 | Proportion of retrieved chunks that are relevant |
 
-> Evaluation was run on a small sample (1-5 test cases) using Ollama as the evaluator LLM due to Groq free tier rate limits. Scores are indicative and not exhaustive.
+> **Note:** Faithfulness evaluation requires multi-step structured reasoning from the judge LLM. Running this locally on consumer hardware (8GB RAM, `qwen2.5:1.5b` as the judge model via Ollama) occasionally results in the judge failing to produce a valid score for a given sample - these are reported as "could not be computed" rather than a misleading zero, rather than silently dropped or faked.
 
 **Faithfulness = 1.0** is the most critical metric for a medical information system — it confirms the LLM is not hallucinating information outside of the retrieved documents.
 
@@ -313,14 +327,15 @@ NutriGuide is evaluated using [RAGAS](https://docs.ragas.io/) on three metrics:
 
 ## Knowledge Base
 
-NutriGuide uses 22 official documents across 4 trusted institutions:
+The local corpus consists of 22 official documents covering:
 
-| Institution | Coverage |
-|-------------|----------|
-| **WHO** — World Health Organization | Child growth standards, complementary feeding, IMCI, stunting prevention, anthropometry |
-| **UNICEF** — Child Nutrition Division | Malnutrition reports, complementary feeding guidance, parenting guides, ECD |
-| **Kemenkes RI** — Ministry of Health | Pedoman Gizi Seimbang, AKG 2019, MTBS, SDIDTK, Buku KIA |
-| **Bappenas** | Strategi Nasional Percepatan Pencegahan Stunting 2018-2024 |
+- **General & complementary feeding guidance** — WHO, UNICEF, and Kemenkes RI infant/young child feeding guidelines
+- **Growth & stunting** — WHO child growth standards, Indonesia's national stunting prevention strategy, and joint WHO/UNICEF/World Bank malnutrition estimates
+- **Illness management** — WHO IMCI and its Indonesian adaptation (MTBS), plus WHO's hospital care guidelines for children
+- **Child development** — Indonesia's SDIDTK stimulation guidelines and UNICEF's early childhood development programme guidance
+- **National regulation** — Kemenkes ministerial regulations on nutrient adequacy and anthropometric standards
+
+Live web retrieval supplements this corpus with the same tier of sources (WHO, CDC, NIH, Kemenkes RI, IDAI, and other vetted health authorities) - see [Source Prioritization](#) in the architecture diagram for the full allowlist.
 
 ---
 
@@ -331,17 +346,23 @@ NutriGuide uses 22 official documents across 4 trusted institutions:
 - **Small evaluator model** — RAGAS evaluation uses Ollama qwen2.5:0.5b locally due to RAM constraints, which may affect evaluation score accuracy.
 - **Context window** — Only top-3 chunks are passed to the LLM. Complex questions requiring synthesis across many document sections may get incomplete answers.
 - **Not a medical professional** — NutriGuide provides information from official documents but is not a substitute for professional medical advice.
+- Web retrieval respects `robots.txt`, so some official sources may be unreachable even when their domain is trusted
+- Chart/graph content embedded as images (not text) is not extracted, even from local PDFs - only text and grid-style tables are captured
+- Session memory and web cache are in-memory only - not persisted across backend restarts, and not shared across multiple worker processes if scaled horizontally
 
 ---
 
 ## Roadmap
 
-- [ ] Deploy to HuggingFace Spaces
-- [ ] Improve table extraction for numeric WHO growth data
-- [ ] Add streaming response support
-- [ ] Expand knowledge base with more Kemenkes documents
-- [ ] Add conversation history / multi-turn support
-- [ ] Improve context precision with better chunking strategy
+- [x] Session-based conversational memory
+- [x] Hybrid query routing (rule-based + LLM)
+- [x] Live web retrieval with trusted-domain allowlist
+- [x] Bidirectional PDF/web fallback
+- [x] Web retrieval TTL cache
+- [x] Table-aware PDF extraction
+- [x] Comparative RAGAS evaluation
+- [ ] OCR/vision-based extraction for chart and graph content
+- [ ] Distributed session/cache store (Redis) for multi-worker deployments
 
 ---
 
