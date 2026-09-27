@@ -25,3 +25,42 @@ EMBEDDING_MODEL = os.getenv(
 )
 
 RERANKER_MODEL = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+# Session memory config
+SESSION_TTL_SECONDS = int(os.getenv("SESSION_TTL_SECONDS", "1800"))
+SESSION_MAX_MESSAGES = int(os.getenv("SESSION_MAX_MESSAGES", "10"))
+
+# Web retrieval config
+WEB_SEARCH_MAX_RESULTS = int(os.getenv("WEB_SEARCH_MAX_RESULTS", "5"))
+WEB_RERANK_TOP_K = int(os.getenv("WEB_RERANK_TOP_K", "3"))
+WEB_FETCH_TIMEOUT = int(os.getenv("WEB_FETCH_TIMEOUT", "8"))
+
+# Allowlist of trusted health sources by trust tier.
+# Tier 1: Official government and international health institutions
+# Tier 2: Academic and research institutions
+# Tier 3: Trusted health organizations (platforms reviewed by doctors)
+TRUSTED_HEALTH_DOMAINS = {
+    # Tier 1
+    "kemenkes.go.id": 1,
+    "idai.or.id": 1,
+    "who.int": 1,
+    "cdc.gov": 1,
+    "nih.gov": 1,
+    "medlineplus.gov": 1,
+    "unicef.org": 1,
+    "pom.go.id": 1,
+    "fda.gov": 1,
+    "efsa.europa.eu": 1,
+    "nhs.uk": 1,
+    # Tier 2
+    "mayoclinic.org": 2,
+    "healthychildren.org": 2,
+    "hopkinsmedicine.org": 2,
+    "health.harvard.edu": 2,
+    # Tier 3
+    "alodokter.com": 3,
+    "halodoc.com": 3,
+}
+
+# Web config cache TTL 
+WEB_CACHE_TTL_SECONDS = int(os.getenv("WEB_CACHE_TTL_SECONDS", "21600"))

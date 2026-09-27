@@ -10,6 +10,7 @@ backend/storage/raw/
 backend/storage/embeddings/
 backend/storage/vectordb/
 backend/storage/processed/
+backend/notebooks/storage/
 backend/logs/*.log
 *.faiss
 *.pkl

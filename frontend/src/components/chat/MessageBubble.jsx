@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import CitationCard from './CitationCard'
-import LoadingDots from '../ui/LoadingDots'
+import LoadingStatus from '../ui/LoadingStatus'
 import { TYPING_SPEED } from '../../constants'
 import './MessageBubble.css'
 
@@ -44,7 +46,7 @@ const MessageBubble = ({ message, isLatest }) => {
       <div className="message-row assistant animate-fade-in">
         <div className="message-avatar assistant-avatar">N</div>
         <div className="message-bubble assistant-bubble loading-bubble">
-          <LoadingDots />
+          <LoadingStatus />
         </div>
       </div>
     )
@@ -58,11 +60,16 @@ const MessageBubble = ({ message, isLatest }) => {
 
       <div className={`message-content-wrap ${isUser ? 'user-wrap' : ''}`}>
         <div className={`message-bubble ${isUser ? 'user-bubble' : 'assistant-bubble'}`}>
-          <p className="message-text">
-            {isUser ? message.content : displayedText}
-            {/* Blinking cursor saat masih ngetik */}
-            {isTyping && <span className="typing-cursor" />}
-          </p>
+          {
+            isUser? (
+              <p className='message-text'>{message.content}</p>
+            ) : (
+              <div className='markdown-content'>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayedText}</ReactMarkdown>
+                {isTyping && <span className="typing-cursor"/>}
+              </div>
+            )
+          }
         </div>
 
         {/* Citation card muncul setelah typing selesai */}

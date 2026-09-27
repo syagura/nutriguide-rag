@@ -1,0 +1,117 @@
+from unittest.mock import patch, MagicMock
+from src.core.services.web.extractor import extract_content, _extract_with_bs4, extract_pdf_content
+
+@patch("src.core.services.web.extractor.trafilatura.extract_metadata")
+@patch("src.core.services.web.extractor.trafilatura.extract")
+def test_extract_content_uses_trafilatura_result(mock_extract, mock_metadata):
+    mock_extract.return_value = "Ini adalah artikel gizi anak yang cukup panjang. " * 10
+    mock_meta = MagicMock()
+    mock_meta.title = "Panduan Gizi Anak"
+    mock_metadata.return_value = mock_meta
+
+    result = extract_content("<html>...</html>", "https://who.int/artikel")
+
+    assert result is not None
+    assert result["title"] == "Panduan Gizi Anak"
+    assert "gizi anak" in result["text"]
+
+@patch("src.core.services.web.extractor.trafilatura.extract_metadata")
+@patch("src.core.services.web.extractor.trafilatura.extract")
+def test_extract_content_falls_back_to_bs4_when_trafilatura_empty(mock_extract, mock_metadata):
+    mock_extract.return_value = None
+    mock_metadata.return_value = None
+
+    html = f"<html><head><title>Judul BS4</title></head><body><p>{'Kontent gizi anak penting. ' * 15}</p></body></html>"
+    result = extract_content(html, "https://who.int/artikel")
+
+    assert result is not None
+    assert result["title"] == "Judul BS4"
+    assert "gizi anak" in result["text"]
+
+@patch("src.core.services.web.extractor.trafilatura.extract_metadata")
+@patch("src.core.services.web.extractor.trafilatura.extract")
+def test_extract_content_returns_none_when_nothing_meaningful(mock_extract, mock_metadata):
+    mock_extract.return_value = "terlalu pendek"
+    mock_metadata.return_value = None
+
+    result = extract_content("<html><body><nav>Menu</nav></body></html>", "https://who.int/artikel")
+    assert result is None
+
+def test_extract_with_bs4_strips_script_and_nav():
+    html = """
+    <html.><head><title>Test</title></head>
+    <body>
+        <nav>Navigasi</nav>
+        <script>alert('x')</script>
+        <p>Ini konten utama</p>
+    </body></html>
+    """
+    text, title = _extract_with_bs4(html)
+
+    assert title == "Test"
+    assert "konten utama" in text
+    assert "alert" not in text
+    assert "Navigasi" not in text
+
+def test_extract_pdf_content_parses_real_pdf_bytes():
+    import fitz
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((50, 50), "Anak usia dua tahun membutuhkan asupan zat besi yang cukup untuk mendukung pertumbuhan. " * 3)
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    result = extract_pdf_content(pdf_bytes, "https://who.int/laporan.pdf")
+
+    assert result is not None
+    assert "zat besi" in result["text"]
+
+def test_extract_pdf_content_returns_none_for_invalid_bytes():
+    result = extract_pdf_content(b"bukan pdf sama sekali", "https://who.int/laporan.pdf")
+    assert result is None
+
+def test_extract_pdf_content_returns_none_when_too_short():
+    import fitz
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((50, 50), "singkat")
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    result = extract_pdf_content(pdf_bytes, "https://who.int/laporan.pdf")
+    assert result is None
+
+@patch("src.core.services.web.extractor.pdfplumber.open")
+def test_extract_pdf_content_inlcudes_table_text(mock_plumber_open):
+    import fitz
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((50, 50), "Panduan klasifikasi gejala anak sakit. " * 5)
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    mock_plumber_page = MagicMock()
+    mock_plumber_page.extract_tables.return_value = [[["Gejala", "Klasifikasi"], ["Demam", "Berat"]]]
+    mock_plumber_doc = MagicMock()
+    mock_plumber_doc.pages = [mock_plumber_page]
+    mock_plumber_open.return_value = mock_plumber_doc
+
+    result = extract_pdf_content(pdf_bytes, "https://who.int/laporan.pdf")
+
+    assert result is not None
+    assert "[TABLE]" in result["text"]
+    assert "Gejala | Klasifikasi" in result["text"]
+
+def test_extract_pdf_content_respects_max_page_cap():
+    import fitz
+    doc = fitz.open()
+    for _ in range(35):
+        page = doc.new_page()
+        page.insert_text((50, 50), "Konten halaman yang cukup panjang untuk lolos filter minimal ekstraksi. " * 3)
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    with patch("src.core.services.web.extractor.pdfplumber.open", side_effect=Exception("skip")):
+        result = extract_pdf_content(pdf_bytes, "https://who.int/laporan-panjang.pdf")
+
+    assert result is not None

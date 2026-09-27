@@ -1,0 +1,96 @@
+from unittest.mock import patch, MagickMock
+from src.core.services.web.web_retriever import retrieve_web_context, _build_web_chunks
+
+@patch("src.core.services.web.web_retriever.search_web")
+def test_retrieve_web_context_returns_empty_when_search_fails(mock_search):
+    mock_search.return_value = []
+    assert retrieve_web_context("query", reranker=MagickMock()) == []
+
+@patch("src.core.services.web.web_retriever.fetch_pages")
+@patch("src.core.services.web.web_retriever.search_web")
+def test_retrieve_web_context_returns_empty_when_no_pages_fetched(mock_search, mock_fetch):
+    mock_search.return_value = [{"title": "A", "url": "https://who.int/a", "snippet": "..."}]
+    mock_fetch.return_value = {}
+    assert retrieve_web_context("query", reranker=MagickMock()) == []
+
+@patch("src.core.services.web.web_retriever.rerank_chunks")
+@patch("src.core.services.web.web_retriever.extract_content")
+@patch("src.core.services.web.web_retriever.fetch_pages")
+@patch("src.core.services.web.web_retriever.search_web")
+def test_retrieve_web_context_full_pipeline(mock_search, mock_fetch, mock_extract, mock_rerank):
+    mock_search.return_value = [{"title": "A", "url": "https://who.int/a", "snippet": "..."}]
+    mock_fetch.return_value = {"https://who.int/a": ("<html>...</html>", "text/html")}
+    mock_extract.return_value = {
+        "text": "Anak usia enam bulan membutuhkan zat besi yang cukup untuk tumbuh kembang. " * 5,
+        "title": "Panduan Gizi"
+    }
+    mock_rerank.return_value = [{"text": "chunk terpilih", "metadata": {"source": "https://who.int/a"}}]
+
+    result = retrieve_web_context("kebutuhan zat besi bayi", reranker=MagickMock())
+
+    assert len(result) == 1
+    mock_rerank.assert_called_once()
+
+@patch("src.core.services.web.web_retriever.extract_pdf_content")
+def test_build_web_chunks_uses_pdf_extractor_for_pdf_content_type(mock_extract_pdf):
+    mock_extract_pdf.return_value = {"text": "Laporan gizi anak dari WHO cukup panjang untuk lolos. " * 10, "title": "Laporan WHO"}
+
+    chunks = _build_web_chunks({"https://who.int/laporan.pdf": (b"pdfbytes", "application/pdf")})
+
+    mock_extract_pdf.assert_called_once_with(b"pdfbytes", "https://who.int/laporan.pdf")
+    assert len(chunks) > 0
+    assert chunks[0]["metadata"]["source_type"] == "web_pdf"
+
+@patch("src.core.services.web.web_retriever.extract_content")
+def test_build_web_chunks_skips_unextractable_pages(mock_extract):
+    mock_extract.return_value = None
+    assert _build_web_chunks({"https://who.int/a": ("<html>...</html>", "text/html")}) == []
+
+@patch("src.core.services.web.web_retriever.extract_content")
+def test_build_web_chunks_tags_source_type_web_for_html(mock_extract):
+    mock_extract.return_value = {
+        "text": "Vitamin D penting untuk pertumbuhan tulang anak. " * 10,
+        "title": "Artikel Vitamin D"
+    }
+    chunks = _build_web_chunks({"https://who.int/vitd": ("<html>...</html>", "text/html")})
+
+    assert len(chunks) > 0
+    assert chunks[0]["metadata"]["source_type"] == "web"
+
+@patch("src.core.services.web.web_retriever.search_web")
+def test_retrieve_web_context_returns_cached_result_without_searching(mock_search):
+    mock_cache = MagickMock()
+    mock_cache.get.return_value = [{"text": "cached chunk", "metadata": {}}]
+
+    result = retrieve_web_context("query", reranker=MagickMock(), cache=mock_cache)
+
+    assert result == [{"text": "cached chunk", "metadata": {}}]
+    mock_search.assert_not_called()
+
+@patch("src.core.services.web.web_retriever.search_web")
+def test_retrieve_web_context_does_not_cache_empty_result(mock_search):
+    mock_search.return_value = []
+    mock_cache = MagickMock()
+    mock_cache.get.return_value = None
+
+    retrieve_web_context("query", reranker=MagickMock(), cache=mock_cache)
+
+    mock_cache.set.assert_not_called()
+
+@patch("scr.core.services.web.web_retriever.rerank_chunks")
+@patch("scr.core.services.web.web_retriever.extract_content")
+@patch("scr.core.services.web.web_retriever.fetch_pages")
+@patch("scr.core.services.web.web_retriever.search_web")
+def test_retrieve_web_context_stores_result_in_cache_on_success(mock_search, mock_fetch, mock_extract, mock_rerank):
+    mock_search.return_value = [{"title": "A", "url": "https://who.int/a", "snippet": "..."}]
+    mock_fetch.return_value = {"https://who.int/a": "<html>...</html>"}
+    mock_extract.return_value = {"text": "the content is long enough to pass the minimum filter. " * 5, "title": "Title"}
+    mock_rerank.return_value = [{"text": "chunk", "metadata": {"source": "https://who.int/a"}}]
+
+    mock_cache = MagickMock()
+    mock_cache.get.return_value = None
+
+    retrieve_web_context("new query", reranker=MagickMock(), cache=mock_cache)
+
+    mock_cache.set.assert_called_once()
+    assert mock_cache.set.call_args[0][0] == "new query"

@@ -7,9 +7,13 @@ import faiss
 from sentence_transformers import SentenceTransformer, CrossEncoder
 
 from core.services.llm.model_factory import get_llm
+from core.services.memory.session_store import SessionStore
+from core.services.web.web_cache import WebCache
+from config.settings import WEB_CACHE_TTL_SECONDS
 from config.settings import (
     VECTOR_DIR, BM25_DIR,
-    EMBEDDING_MODEL, RERANKER_MODEL
+    EMBEDDING_MODEL, RERANKER_MODEL,
+    SESSION_TTL_SECONDS, SESSION_MAX_MESSAGES
 )
 
 logger = logging.getLogger(__name__)
@@ -66,3 +70,11 @@ def get_pipeline_components() -> dict:
         "reranker": reranker,
         "llm": llm
     }
+
+@lru_cache(maxsize=1)
+def get_session_store() -> SessionStore:
+    return SessionStore(ttl_seconds=SESSION_TTL_SECONDS, max_messages=SESSION_MAX_MESSAGES)
+
+@lru_cache(maxsize=1)
+def get_web_cache() -> WebCache:
+    return WebCache(ttl_seconds=WEB_CACHE_TTL_SECONDS)

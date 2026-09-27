@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { sendChatMessage } from '../utils/api'
 
 const SESSION_KEY = 'nutriguide_messages'
+const SESSION_ID_KEY = 'nutriguide_session_id'
 
 const loadMessages = () => {
   try {
@@ -14,6 +15,7 @@ const loadMessages = () => {
 
 export const useChat = () => {
   const [messages, setMessages] = useState(loadMessages)
+  const [sessionId, setSessionId] = useState(() => sessionStorage.getItem(SESSION_ID_KEY) || null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -39,7 +41,12 @@ export const useChat = () => {
     setError(null)
 
     try {
-      const response = await sendChatMessage(query)
+      const response = await sendChatMessage(query, sessionId)
+
+      if (response.session_id && response.session_id !== sessionId) {
+        setSessionId(response.session_id)
+        sessionStorage.setItem(SESSION_ID_KEY, response.session_id)
+      }
 
       const assistantMessage = {
         id: Date.now() + 1,
@@ -56,12 +63,14 @@ export const useChat = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [sessionId])
 
   const clearMessages = useCallback(() => {
     setMessages([])
     setError(null)
+    setSessionId(null)
     sessionStorage.removeItem(SESSION_KEY)
+    sessionStorage.removeItem(SESSION_ID_KEY)
   }, [])
 
   return { messages, isLoading, error, sendMessage, clearMessages }
