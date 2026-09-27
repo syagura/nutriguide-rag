@@ -20,4 +20,4 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git subtree push --prefix backend https://syahrul11:$HF_TOKEN@huggingface.co/spaces/syahrul11/nutriguide-rag/tree/main main
+          git subtree push --prefix backend https://syahrul11:$HF_TOKEN@huggingface.co/spaces/syahrul11/nutriguide-rag main
