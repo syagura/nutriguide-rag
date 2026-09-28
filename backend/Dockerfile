@@ -10,14 +10,14 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install huggingface_hub
 
-COPY src. ./src/
+COPY src/ ./src/
 
 COPY download_vectordb.py .
+
 RUN python download_vectordb.py
 
 ENV PYTHONPATH=/app/src
 
 EXPOSE 7860
 
-# Jalankan uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
