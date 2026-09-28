@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'backend/**'
+      - '.github/workflows/**'
 
 jobs:
   deploy:
@@ -20,4 +21,6 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
           git subtree push --prefix backend https://syahrul11:$HF_TOKEN@huggingface.co/spaces/syahrul11/nutriguide-rag main
