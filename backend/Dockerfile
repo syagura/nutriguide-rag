@@ -4,16 +4,21 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
+RUN useradd -m -u 1000 user
+USER user
+ENV PATH="/home/user/.local/bin:$PATH"
+
 WORKDIR /app
 
-COPY requirements.txt .
+COPY --chown=user requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY src/ ./src/
-COPY storage/vectordb/ ./storage/vectordb/
+COPY --chown=user src/ ./src/
+COPY --chown=user storage/vectordb/ ./storage/vectordb/
 
 ENV PYTHONPATH=/app/src
 
 EXPOSE 7860
 
+# Jalankan uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
