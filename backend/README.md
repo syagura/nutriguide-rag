@@ -1,9 +1,9 @@
 ---
-title: Nutriguide RAG Backend
-emoji: 🥗
-colorFrom: green
-colorTo: blue
+title: Nutriguide Rag
+emoji: 🌍
+colorFrom: indigo
+colorTo: indigo
 sdk: docker
-app_port: 7860
 pinned: false
+license: mit
 ---
